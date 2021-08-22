@@ -34,6 +34,8 @@ let flags = [];
 let filenames = [];
 
 let secondaryArguments = [];
+let renameArguments = [];
+
 //example
 //flag = [-a,-w,-e]
 //filesname = [a.txt,b.txt];
@@ -44,15 +46,20 @@ flags.push(i);  //push the flags in flag array
     else if(i[0] == "$"){
         secondaryArguments.push(i.slice(1)); //argument after $
     }
-    else{
+    else if(i[0] == "%"){ //rename file identifier
+        renameArguments.push(i.slice(1));
+
+    }
+   
+   else{
         filenames.push(i); //push the file
     }
 }
 
 
 //optimised
-for(let file of filenames){
-    let fileData = fs.readFileSync(file,"utf-8");
+for(let j = 0;j<filenames.length;j++){
+    let fileData = fs.readFileSync(filenames[j],"utf-8");
     for(let flag of flags) {
         if(flag == "-rs"){ //remove spaces
           
@@ -70,29 +77,42 @@ for(let file of filenames){
                 fileData = removeAll(fileData, secondaryArgument);
             }
         }
-            if(flag == "-w"){
-               
-            fs.writeFileSync(file, "hello");
-                
-            }
-            if(flag == '-s'){
-                // add 1,2,3 when a new line
-              fileData = addNewline(fileData);
-            }
 
-            if(flag == '-sn'){
-            fileData = addNewline1(fileData);
+        //adding serial number to lines
+            if(flag == '-s'){
+            fileData = addNewline(fileData);
             }
             if(flag == '-rel'){
 fileData = removeExtraLine(fileData);
             }
+            //writing the file through console(using the #sign followed by the content)
+            if(flag == "-w"){
+               
+                let updatedContent = fs.readFileSync(filenames[j+1], "utf-8");
+            fs.writeFileSync(filenames[j],updatedContent);
+             fileData = fs.readFileSync(filenames[j],"utf-8");
+             break;
+                
+            }
+            //appending the file that is adding contents to the existing file
+            if(flag == "-a"){
+let appendContent =  fs.readFileSync(filenames[j+1], "utf-8");
+fs.appendFileSync(filenames[j]," " + appendContent);
+fileData = fs.readFileSync(filenames[j],"utf-8");
+break;
+            }
+             //count no. of lines
             if(flag == '-cli'){
-                //count no. of lines
+               
 fileData = countLines(fileData);
             }
-            if(flag == '-cw'){
-                //count no. of words
-                fileData = countWords(fileData);
+            
+            //rename files using %sign followed by file name
+            if(flag == '-ren'){
+
+                let newName = renameArguments.join("");
+                fs.renameSync(filenames[j],newName);
+                fileData = "File renamed";
             }
     }
 console.log(fileData);
@@ -101,24 +121,14 @@ console.log(fileData);
 function removeAll(string, removalData){
     return string.split(removalData).join("");
 }
-//adding numbers in front of new lines
-//we first split the string by new line into array and then add number at each of the element of the array
-function addNewline(string){
-    let contentArr = string.split("\r\n");
-    let j = 1;
-    for(let i = 0;i<contentArr.length;i++){
-        contentArr[i] = `${j}  ${contentArr[i]}`;
-        j++;
-    }
-    return contentArr.join("\r\n");
-}
+
 //adding numbers in front of new line
 //omitting the empty lines
 
 //We first split the string content by new line , after that we iterate over each content of the array and if it's empty or not
 //if it's empty then don't add the number else if it's not add the number
 
-function addNewline1(string){
+function addNewline(string){
     let contentArr = string.split("\r\n");
     let j = 1;
     for(let i = 0;i<contentArr.length;i++){
@@ -163,5 +173,4 @@ function countLines(string){
 
     return contentArr.length;
 }
-
 
